@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Video Viral - Áp Lực Tạo Kim Cương (Bản Có Intro Điện Ảnh)</title>
+  <title>Video Viral - Áp Lực Tạo Kim Cương (Nhạc TikTok Thật)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,700;0,900;1,400&family=Dancing+Script:wght@700&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
@@ -16,6 +16,7 @@
       --danger-red: #ff3b30;
       --text-white: #f7f4ee;
       --hud-muted: rgba(247, 244, 238, 0.58);
+      --bass-scale: 1;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -32,7 +33,6 @@
       user-select: none;
     }
 
-    /* Khung sân khấu chính (16:9 mặc định, bấm R để đổi sang 9:16 TikTok) */
     #stage {
       position: relative;
       width: 100vw;
@@ -49,7 +49,6 @@
       max-height: 100vh;
     }
 
-    /* Hiệu ứng rung nhẹ khi bass drop (GPU siêu nhẹ) */
     #stage.shake {
       animation: cameraShake 0.28s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
     }
@@ -61,7 +60,6 @@
       80% { transform: translate(3px, 2px); }
     }
 
-    /* Hai thanh đen điện ảnh (Letterbox) cho phần Mở đầu */
     .letterbox-top, .letterbox-bottom {
       position: absolute;
       left: 0;
@@ -105,7 +103,6 @@
       pointer-events: none;
     }
 
-    /* Thanh HUD trên & dưới */
     .hud-top, .hud-bottom {
       position: absolute;
       left: 3.5%;
@@ -146,7 +143,6 @@
       background: linear-gradient(90deg, var(--gold-deep), var(--gold-light));
     }
 
-    /* Các phân cảnh */
     .scene {
       position: absolute;
       inset: 0;
@@ -232,28 +228,23 @@
       transform: scale(1);
     }
 
-    /* =====================================================================
-       SCENE 0: PHẦN MỞ ĐẦU (CINEMATIC INTRO)
-       ===================================================================== */
-    #scene-0 {
-      flex-direction: column;
-      text-align: center;
+    /* Phần tử nảy theo nhịp bass nhạc thật */
+    .beat-reactive {
+      transform: scale(var(--bass-scale));
+      transition: transform 0.06s linear;
     }
+
+    /* SCENE 0: INTRO */
+    #scene-0 { flex-direction: column; text-align: center; }
     .intro-rings {
       position: absolute;
       width: clamp(280px, 46vw, 620px);
       height: clamp(280px, 46vw, 620px);
       pointer-events: none;
-      opacity: 0.38;
+      opacity: 0.42;
     }
-    .ring-cw {
-      transform-origin: 50% 50%;
-      animation: spinCW 24s linear infinite;
-    }
-    .ring-ccw {
-      transform-origin: 50% 50%;
-      animation: spinCCW 18s linear infinite;
-    }
+    .ring-cw { transform-origin: 50% 50%; animation: spinCW 24s linear infinite; }
+    .ring-ccw { transform-origin: 50% 50%; animation: spinCCW 18s linear infinite; }
     @keyframes spinCW { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     @keyframes spinCCW { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
 
@@ -269,20 +260,7 @@
       margin-bottom: 18px;
       z-index: 2;
     }
-
-    .intro-main {
-      z-index: 2;
-      position: relative;
-    }
-
-    .glitch-word {
-      animation: subtleFlicker 2.5s infinite;
-    }
-    @keyframes subtleFlicker {
-      0%, 19%, 21%, 63%, 65%, 100% { opacity: 1; }
-      20%, 64% { opacity: 0.72; }
-    }
-
+    .intro-main { z-index: 2; position: relative; }
     .intro-sub {
       margin-top: 18px;
       font-size: clamp(14px, 1.5vw, 22px);
@@ -290,7 +268,6 @@
       color: rgba(247, 244, 238, 0.82);
       z-index: 2;
     }
-
     .scan-line {
       position: absolute;
       left: 10%;
@@ -328,12 +305,7 @@
     }
     @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
 
-    .s1-right {
-      flex: 0.85;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+    .s1-right { flex: 0.85; display: flex; flex-direction: column; align-items: center; }
     .hero-emblem {
       width: clamp(190px, 24vw, 340px);
       height: clamp(190px, 24vw, 340px);
@@ -362,10 +334,7 @@
       align-items: center;
       justify-content: center;
     }
-    .hammer-arm {
-      transform-origin: 85% 80%;
-      animation: hammerStrike 0.9s ease-in-out infinite;
-    }
+    .hammer-arm { transform-origin: 85% 80%; animation: hammerStrike 0.9s ease-in-out infinite; }
     @keyframes hammerStrike {
       0%, 100% { transform: rotate(-28deg); }
       45% { transform: rotate(4deg); }
@@ -420,11 +389,7 @@
       flex-direction: column;
       justify-content: space-between;
     }
-    .frame-tag {
-      font-size: clamp(9px, 0.9vw, 12px);
-      letter-spacing: 0.2em;
-      color: var(--gold-main);
-    }
+    .frame-tag { font-size: clamp(9px, 0.9vw, 12px); letter-spacing: 0.2em; color: var(--gold-main); }
 
     /* SCENE 5 */
     #scene-5 { flex-direction: column; text-align: center; }
@@ -489,54 +454,77 @@
       pointer-events: none;
       transition: bottom 0.5s;
     }
-    #stage.cinema-bars .subtitle-bar {
-      bottom: 13.5%;
-    }
+    #stage.cinema-bars .subtitle-bar { bottom: 13.5%; }
     .sub-active { color: var(--gold-main); }
     .sub-dim { color: rgba(255, 255, 255, 0.65); }
 
     /* Thanh điều khiển nổi */
     .controls {
       position: fixed;
-      top: 14px;
+      top: 12px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 50;
       display: flex;
       flex-wrap: wrap;
+      align-items: center;
       justify-content: center;
-      gap: 8px;
-      background: rgba(15, 13, 10, 0.92);
-      border: 1px solid rgba(245, 185, 66, 0.45);
+      gap: 7px;
+      background: rgba(15, 13, 10, 0.94);
+      border: 1px solid rgba(245, 185, 66, 0.5);
       padding: 8px 14px;
       border-radius: 999px;
       transition: opacity 0.25s;
+      max-width: 96vw;
     }
     .controls.hidden { opacity: 0; pointer-events: none; }
-    .controls button {
-      background: rgba(245, 185, 66, 0.18);
+    .controls button, .offset-box {
+      background: rgba(245, 185, 66, 0.16);
       color: var(--gold-light);
       border: 1px solid rgba(245, 185, 66, 0.45);
-      padding: 6px 13px;
+      padding: 6px 12px;
       border-radius: 999px;
       font-family: inherit;
       font-size: 12px;
       font-weight: 700;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
     }
     .controls button:hover, .controls button.primary {
       background: var(--gold-main);
       color: #090807;
     }
+    .offset-box { cursor: default; }
+    .offset-box input {
+      width: 42px;
+      background: #090807;
+      color: var(--gold-light);
+      border: 1px solid var(--gold-main);
+      border-radius: 6px;
+      padding: 2px 4px;
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
 
+  <!-- Trình phát nhạc MP3 thật -->
+  <audio id="bg-music" preload="auto"></audio>
+  <input type="file" id="mp3-picker" accept="audio/*" style="display:none" />
+
   <div class="controls" id="controls">
-    <button class="primary" id="btn-play">▶ Bắt đầu + Nhạc + Giọng đọc (Space)</button>
-    <button id="btn-voice">🎙 Giọng đọc AI: BẬT</button>
-    <button id="btn-ratio">📱 Khung 16:9 / 9:16 (R)</button>
-    <button id="btn-hide">👁 Ẩn nút để quay (H)</button>
+    <button class="primary" id="btn-play">▶ Bắt đầu (Space)</button>
+    <button id="btn-pick-mp3">🎵 Chọn nhạc TikTok (.MP3)</button>
+    <div class="offset-box" title="Bỏ qua đoạn dạo đầu của bài hát để vào thẳng đoạn hay nhất">
+      ⏩ Vào nhạc từ giây: <input type="number" id="music-offset" value="0" min="0" max="300" />
+    </div>
+    <button id="btn-voice">🎙 Giọng AI: BẬT</button>
+    <button id="btn-ratio">📱 16:9 / 9:16 (R)</button>
+    <button id="btn-hide">👁 Ẩn nút (H)</button>
   </div>
 
   <div id="stage" class="cinema-bars">
@@ -551,13 +539,10 @@
       <span>TUỔI TRẺ · BẢN LĨNH &amp; KHÁT VỌNG</span>
     </div>
 
-    <!-- ===================================================================
-         SCENE 0: PHẦN MỞ ĐẦU (CINEMATIC INTRO 0.0s - 4.2s)
-         =================================================================== -->
+    <!-- SCENE 0: INTRO -->
     <section class="scene" id="scene-0">
       <div class="scan-line"></div>
-      <!-- Vòng xoay thiên văn tạo chiều sâu -->
-      <svg class="intro-rings" viewBox="0 0 300 300" fill="none">
+      <svg class="intro-rings beat-reactive" viewBox="0 0 300 300" fill="none">
         <circle class="ring-cw" cx="150" cy="150" r="138" stroke="#f5b942" stroke-width="1" stroke-dasharray="6 8"/>
         <circle class="ring-ccw" cx="150" cy="150" r="112" stroke="#ffe29a" stroke-width="1.2" stroke-dasharray="22 10 4 10"/>
         <polygon class="ring-cw" points="150,24 259,213 41,213" stroke="rgba(245,185,66,0.35)" stroke-width="0.9"/>
@@ -566,13 +551,13 @@
 
       <div class="intro-badge anim-item" data-delay="150">CHƯƠNG 01 · DÀNH CHO NGƯỜI KHÔNG BỎ CUỘC</div>
       <div class="intro-main">
-        <div class="impact-xl silver-text slam-item glitch-word" data-delay="650">ĐỪNG LƯỚT QUA</div>
+        <div class="impact-xl silver-text slam-item" data-delay="650">ĐỪNG LƯỚT QUA</div>
         <div class="impact-lg gold-text slam-item" data-delay="1450" style="margin-top: 8px;">NẾU BẠN ĐANG MỆT MỎI</div>
       </div>
-      <div class="intro-sub anim-item" data-delay="2350">Hãy nghe trọn vẹn 25 giây này...</div>
+      <div class="intro-sub anim-item" data-delay="2350">Hãy nghe trọn vẹn 27 giây này...</div>
     </section>
 
-    <!-- SCENE 1: HOOK -->
+    <!-- SCENE 1 -->
     <section class="scene" id="scene-1">
       <div class="s1-left">
         <div class="type-line"><span id="typewriter"></span><span class="cursor-block"></span></div>
@@ -581,7 +566,7 @@
         <div class="impact-xl gold-text slam-item" data-delay="1950">LẠI.</div>
       </div>
       <div class="s1-right anim-item" data-delay="350">
-        <div class="hero-emblem">
+        <div class="hero-emblem beat-reactive">
           <svg width="58%" height="58%" viewBox="0 0 120 120" fill="none">
             <circle cx="60" cy="60" r="52" stroke="#f5b942" stroke-width="1.5" stroke-dasharray="4 4"/>
             <polygon points="60,12 72,54 108,60 72,66 60,108 48,66 12,60 48,54" fill="#f5b942"/>
@@ -592,7 +577,7 @@
       </div>
     </section>
 
-    <!-- SCENE 2: RÈN GIŨA -->
+    <!-- SCENE 2 -->
     <section class="scene" id="scene-2">
       <div class="forge-box anim-item" data-delay="150">
         <div class="shock-ring"></div>
@@ -612,14 +597,14 @@
       </div>
     </section>
 
-    <!-- SCENE 3: KIM CƯƠNG -->
+    <!-- SCENE 3 -->
     <section class="scene" id="scene-3">
       <div>
         <div class="script-text anim-item" data-delay="200">Từ viên đá thô</div>
         <div class="impact-xl silver-text slam-item" data-delay="850">KIM CƯƠNG</div>
         <div class="impact-lg gold-text slam-item" data-delay="1450">MỚI TỎA SÁNG</div>
       </div>
-      <div class="diamond-orb slam-item" data-delay="950">
+      <div class="diamond-orb slam-item beat-reactive" data-delay="950">
         <svg width="62%" height="62%" viewBox="0 0 120 120" fill="none">
           <polygon points="32,24 88,24 110,50 60,104 10,50" fill="rgba(255,255,255,0.16)" stroke="#ffffff" stroke-width="2.5"/>
           <polyline points="10,50 110,50" stroke="#ffffff" stroke-width="1.5"/>
@@ -628,7 +613,7 @@
       </div>
     </section>
 
-    <!-- SCENE 4: CHIÊM NGHIỆM -->
+    <!-- SCENE 4 -->
     <section class="scene" id="scene-4">
       <div>
         <div class="script-text anim-item" data-delay="200">Đời không trải hoa</div>
@@ -645,7 +630,7 @@
       </div>
     </section>
 
-    <!-- SCENE 5: CAO TRÀO -->
+    <!-- SCENE 5 -->
     <section class="scene" id="scene-5">
       <div class="storm-title slam-item" data-delay="200">
         <div class="impact-xl silver-text">QUA BÃO GIÔNG</div>
@@ -654,12 +639,12 @@
         </svg>
       </div>
       <div class="impact-lg gold-text slam-item" data-delay="1100" style="margin-top:10px;">RÈN BẢN LĨNH</div>
-      <div class="halo-burst slam-item" data-delay="1950">
+      <div class="halo-burst slam-item beat-reactive" data-delay="1950">
         <div class="impact-xl gold-text">CHẠM ĐỈNH CAO</div>
       </div>
     </section>
 
-    <!-- SCENE 6: THẺ TỔNG KẾT -->
+    <!-- SCENE 6 -->
     <section class="scene" id="scene-6">
       <div class="archive-frame anim-item" data-delay="200" style="flex:0.85;">
         <div class="frame-tag">THÔNG ĐIỆP · GỬI NGƯỜI TRẺ</div>
@@ -694,9 +679,9 @@
 
   <script>
     /* =====================================================================
-       1. KỊCH BẢN & THỜI GIAN (CÓ PHẦN MỞ ĐẦU 4.2 GIÂY)
+       1. KỊCH BẢN & THỜI GIAN
        ===================================================================== */
-    const TOTAL_DURATION = 27500; // 27.5 giây trọn vẹn
+    const TOTAL_DURATION = 27500;
 
     const SCENES = [
       {
@@ -759,7 +744,58 @@
     ];
 
     /* =====================================================================
-       2. GIỌNG ĐỌC TIẾNG VIỆT AI TỰ ĐỘNG (WEB SPEECH API)
+       2. TRÌNH PHÁT NHẠC MP3 THẬT + BẮT NHỊP BASS (BEAT DETECTOR)
+       ===================================================================== */
+    const bgMusic = document.getElementById('bg-music');
+    const mp3Picker = document.getElementById('mp3-picker');
+    const btnPickMp3 = document.getElementById('btn-pick-mp3');
+
+    let audioCtx = null;
+    let analyser = null;
+    let freqData = null;
+    let isAudioHooked = false;
+    let isSpeaking = false;
+    let hasCustomMusic = false;
+
+    function hookAudioAnalyser() {
+      if (isAudioHooked) return;
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioCtx.createMediaElementSource(bgMusic);
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 64;
+        freqData = new Uint8Array(analyser.frequencyBinCount);
+        source.connect(analyser);
+        analyser.connect(audioCtx.destination);
+        isAudioHooked = true;
+      } catch (e) {
+        // Fallback an toàn nếu trình duyệt chặn analyser
+      }
+    }
+
+    btnPickMp3.addEventListener('click', () => mp3Picker.click());
+
+    mp3Picker.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const blobUrl = URL.createObjectURL(file);
+      bgMusic.src = blobUrl;
+      hasCustomMusic = true;
+      const shortName = file.name.length > 20 ? file.name.slice(0, 18) + '...' : file.name;
+      btnPickMp3.textContent = '🎵 ' + shortName;
+      startFullVideo();
+    });
+
+    function getBassEnergy() {
+      if (!analyser || !freqData || bgMusic.paused) return 0;
+      analyser.getByteFrequencyData(freqData);
+      // Lấy 4 dải tần siêu trầm (Sub-bass / Kick)
+      const avg = (freqData[0] + freqData[1] + freqData[2] + freqData[3]) / 4;
+      return Math.max(0, (avg - 130) / 125); // Trả về 0.0 -> 1.0 khi có cú đập bass
+    }
+
+    /* =====================================================================
+       3. GIỌNG ĐỌC TIẾNG VIỆT AI + AUTO-DUCKING NHẠC NỀN
        ===================================================================== */
     let voiceEnabled = true;
     let viVoice = null;
@@ -779,7 +815,10 @@
     }
 
     function speakLine(text) {
-      if (!voiceEnabled || !('speechSynthesis' in window)) return;
+      if (!voiceEnabled || !('speechSynthesis' in window)) {
+        isSpeaking = false;
+        return;
+      }
       window.speechSynthesis.cancel();
       const utter = new SpeechSynthesisUtterance(text);
       utter.lang = 'vi-VN';
@@ -787,174 +826,16 @@
       utter.rate = 1.12;
       utter.pitch = 0.93;
       utter.volume = 1.0;
+
+      utter.onstart = () => { isSpeaking = true; };
+      utter.onend = () => { isSpeaking = false; };
+      utter.onerror = () => { isSpeaking = false; };
+
       window.speechSynthesis.speak(utter);
     }
 
     /* =====================================================================
-       3. NHẠC NỀN ĐIỆN ẢNH + NHỊP TIM INTRO + BASS DROP (WEB AUDIO API)
-       ===================================================================== */
-    class CinematicAudioEngine {
-      constructor() {
-        this.ctx = null;
-        this.master = null;
-        this.musicTimer = null;
-        this.step = 0;
-        this.isPlaying = false;
-      }
-
-      start() {
-        if (!this.ctx) {
-          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (this.ctx.state === 'suspended') this.ctx.resume();
-
-        this.stop();
-        this.master = this.ctx.createGain();
-        this.master.gain.value = 0.88;
-        this.master.connect(this.ctx.destination);
-
-        this.step = 0;
-        this.isPlaying = true;
-        this.playMusicBeat();
-        this.musicTimer = setInterval(() => this.playMusicBeat(), 468);
-      }
-
-      stop() {
-        this.isPlaying = false;
-        if (this.musicTimer) clearInterval(this.musicTimer);
-        if (this.master) {
-          try { this.master.disconnect(); } catch (e) {}
-        }
-      }
-
-      playMusicBeat() {
-        if (!this.isPlaying || !this.ctx) return;
-        const now = this.ctx.currentTime;
-        const s = this.step;
-
-        // 9 nhịp đầu (0 - 4.2s) là phần Intro: tiếng nhịp tim trầm + nốt piano dồn dập
-        if (s < 9) {
-          if (s % 2 === 0) {
-            this.heartbeat(now);
-          }
-          // Nốt đàn căng thẳng tăng dần cao độ dẫn vào Scene 1
-          const introNotes = [220, 246.94, 261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88];
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(introNotes[s], now);
-          gain.gain.setValueAtTime(0.001, now);
-          gain.gain.linearRampToValueAtTime(0.05 + s * 0.008, now + 0.05);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
-          osc.connect(gain);
-          gain.connect(this.master);
-          osc.start(now);
-          osc.stop(now + 0.6);
-          this.step++;
-          return;
-        }
-
-        // Từ nhịp thứ 9 trở đi: Hợp âm cao trào chính
-        const mainStep = s - 9;
-        const progressions = [
-          [220.00, 261.63, 329.63], // Am
-          [174.61, 220.00, 261.63], // F
-          [261.63, 329.63, 392.00], // C
-          [196.00, 246.94, 293.66], // G
-          [220.00, 261.63, 329.63], // Am cao trào
-          [174.61, 261.63, 329.63]  // Fmaj7 kết bùng nổ
-        ];
-        const barIdx = Math.min(5, Math.floor(mainStep / 8));
-        const chord = progressions[barIdx];
-
-        const noteFreq = chord[mainStep % chord.length] * (mainStep % 4 === 2 ? 2 : 1);
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(noteFreq, now);
-
-        const vol = barIdx === 5 ? 0.14 : (barIdx === 0 ? 0.07 : 0.095);
-        gain.gain.setValueAtTime(0.001, now);
-        gain.gain.linearRampToValueAtTime(vol, now + 0.04);
-        gain.gain.exponentialRampToValueAtTime(0.0008, now + 0.85);
-
-        osc.connect(gain);
-        gain.connect(this.master);
-        osc.start(now);
-        osc.stop(now + 0.9);
-
-        if (mainStep % 2 === 0) {
-          const kick = this.ctx.createOscillator();
-          const kGain = this.ctx.createGain();
-          kick.type = 'sine';
-          kick.frequency.setValueAtTime(barIdx >= 4 ? 96 : 76, now);
-          kick.frequency.exponentialRampToValueAtTime(28, now + 0.28);
-
-          const kickVol = barIdx >= 4 ? 0.23 : 0.14;
-          kGain.gain.setValueAtTime(kickVol, now);
-          kGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-
-          kick.connect(kGain);
-          kGain.connect(this.master);
-          kick.start(now);
-          kick.stop(now + 0.32);
-        }
-
-        this.step++;
-      }
-
-      heartbeat(now) {
-        if (!this.ctx || !this.master) return;
-        [0, 0.16].forEach((offset, idx) => {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(idx === 0 ? 68 : 56, now + offset);
-          osc.frequency.exponentialRampToValueAtTime(26, now + offset + 0.14);
-          gain.gain.setValueAtTime(idx === 0 ? 0.28 : 0.18, now + offset);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.15);
-          osc.connect(gain);
-          gain.connect(this.master);
-          osc.start(now + offset);
-          osc.stop(now + offset + 0.16);
-        });
-      }
-
-      boom(freq = 65, duration = 0.7) {
-        if (!this.ctx || !this.master) return;
-        const now = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq * 1.9, now);
-        osc.frequency.exponentialRampToValueAtTime(26, now + duration);
-        gain.gain.setValueAtTime(0.34, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-        osc.connect(gain);
-        gain.connect(this.master);
-        osc.start(now);
-        osc.stop(now + duration);
-      }
-
-      tick() {
-        if (!this.ctx || !this.master) return;
-        const now = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(980, now);
-        gain.gain.setValueAtTime(0.05, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
-        osc.connect(gain);
-        gain.connect(this.master);
-        osc.start(now);
-        osc.stop(now + 0.04);
-      }
-    }
-    const audioEngine = new CinematicAudioEngine();
-
-    /* =====================================================================
-       4. CANVAS HẠT ÁNH SÁNG SIÊU NHẸ (36 HẠT)
+       4. CANVAS HẠT ÁNH SÁNG PHẢN ỨNG THEO BASS (SIÊU NHẸ 36 HẠT)
        ===================================================================== */
     const canvas = document.getElementById('fx-canvas');
     const ctx = canvas.getContext('2d', { alpha: true });
@@ -979,8 +860,11 @@
       });
     }
 
-    function renderFX(t) {
+    function renderFX(t, bass) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Cập nhật độ nảy CSS theo tiếng bass
+      document.documentElement.style.setProperty('--bass-scale', (1 + bass * 0.1).toFixed(3));
 
       if (currentMode === 'sunburst' || currentMode === 'diamond' || currentMode === 'intro') {
         const cx = canvas.width * (currentMode === 'intro' ? 0.5 : 0.72);
@@ -988,9 +872,10 @@
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(t * 0.00016);
+        const rayAlpha = (currentMode === 'diamond' ? 0.06 : 0.065) + bass * 0.05;
         ctx.fillStyle = currentMode === 'diamond'
-          ? 'rgba(255, 255, 255, 0.06)'
-          : 'rgba(245, 185, 66, 0.065)';
+          ? `rgba(255, 255, 255, ${rayAlpha})`
+          : `rgba(245, 185, 66, ${rayAlpha})`;
         for (let i = 0; i < 12; i++) {
           ctx.rotate((Math.PI * 2) / 12);
           ctx.beginPath();
@@ -1003,11 +888,12 @@
         ctx.restore();
       }
 
+      const speedBoost = 1 + bass * 2.2;
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
         if (currentMode === 'storm') {
-          p.x -= 2.4;
-          p.y += 10.5;
+          p.x -= 2.4 * speedBoost;
+          p.y += 10.5 * speedBoost;
           ctx.strokeStyle = 'rgba(200, 220, 255, 0.28)';
           ctx.lineWidth = 1;
           ctx.beginPath();
@@ -1015,13 +901,13 @@
           ctx.lineTo(p.x + 3, p.y - 13);
           ctx.stroke();
         } else {
-          p.x += p.vx + (currentMode === 'petals' ? 1.3 : 0);
-          p.y += p.vy;
+          p.x += (p.vx + (currentMode === 'petals' ? 1.3 : 0)) * speedBoost;
+          p.y += p.vy * speedBoost;
           ctx.fillStyle = (currentMode === 'diamond' || currentMode === 'petals')
             ? `rgba(255, 255, 255, ${p.alpha})`
             : `rgba(245, 185, 66, ${p.alpha})`;
           ctx.beginPath();
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.arc(p.x, p.y, p.r + bass * 1.1, 0, Math.PI * 2);
           ctx.fill();
         }
 
@@ -1033,7 +919,7 @@
     }
 
     /* =====================================================================
-       5. ĐIỀU KHIỂN TIMELINE + RUNG MÀN HÌNH + ĐỒNG BỘ GIỌNG ĐỌC
+       5. ĐIỀU KHIỂN TIMELINE
        ===================================================================== */
     const stageEl = document.getElementById('stage');
     let startTime = null;
@@ -1079,7 +965,6 @@
       if (idx > 0) triggerShake();
 
       if (isStarted) {
-        audioEngine.boom(idx === 5 ? 50 : 68, 0.75);
         speakLine(sceneData.sub);
       }
 
@@ -1088,10 +973,7 @@
         const delay = Number(el.dataset.delay);
         timers.push(setTimeout(() => {
           el.classList.add('show');
-          if (el.classList.contains('slam-item')) {
-            triggerShake();
-            if (isStarted) audioEngine.boom(84, 0.32);
-          }
+          if (el.classList.contains('slam-item')) triggerShake();
         }, delay));
       });
 
@@ -1101,7 +983,6 @@
         [...sceneData.typeText].forEach((ch, k) => {
           timers.push(setTimeout(() => {
             target.textContent += ch;
-            if (isStarted && ch !== ' ') audioEngine.tick();
           }, k * 55));
         });
       }
@@ -1128,6 +1009,12 @@
       if (!startTime) startTime = now;
       const elapsed = (now - startTime) % TOTAL_DURATION;
 
+      // Auto-ducking mượt mà: hạ âm lượng nhạc khi giọng đọc cất lên
+      if (hasCustomMusic && !bgMusic.paused) {
+        const targetVol = (voiceEnabled && isSpeaking) ? 0.32 : 0.95;
+        bgMusic.volume += (targetVol - bgMusic.volume) * 0.12;
+      }
+
       const pct = (elapsed / TOTAL_DURATION) * 100;
       document.getElementById('progress-fill').style.width = `${pct}%`;
       const sec = Math.floor(elapsed / 1000);
@@ -1141,23 +1028,33 @@
         updateSubtitle(s.sub, Math.min(1, localRatio * 1.25));
       }
 
-      renderFX(now);
+      const bass = getBassEnergy();
+      renderFX(now, bass);
       requestAnimationFrame(loop);
     }
 
     function startFullVideo() {
       isStarted = true;
-      audioEngine.start();
       activeSceneIndex = -1;
       startTime = performance.now();
+
+      if (hasCustomMusic) {
+        hookAudioAnalyser();
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        const offset = Math.max(0, Number(document.getElementById('music-offset').value) || 0);
+        bgMusic.currentTime = offset;
+        bgMusic.volume = 0.95;
+        bgMusic.play().catch(() => {});
+      }
     }
 
     document.getElementById('btn-play').addEventListener('click', startFullVideo);
 
     document.getElementById('btn-voice').addEventListener('click', (e) => {
       voiceEnabled = !voiceEnabled;
+      isSpeaking = false;
       if (!voiceEnabled && 'speechSynthesis' in window) window.speechSynthesis.cancel();
-      e.target.textContent = voiceEnabled ? '🎙 Giọng đọc AI: BẬT' : '🔇 Giọng đọc AI: TẮT';
+      e.target.textContent = voiceEnabled ? '🎙 Giọng AI: BẬT' : '🔇 Giọng AI: TẮT';
     });
 
     document.getElementById('btn-ratio').addEventListener('click', () => {
