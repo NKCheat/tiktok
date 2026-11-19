@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kinetic Video - Bản Lĩnh Tuổi Trẻ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,700;0,900;1,400&family=Dancing+Script:wght@700&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #090807;
+      --gold-light: #ffe29a;
+      --gold-main: #f5b942;
+      --gold-deep: #c97e16;
+      --danger-red: #ff3b30;
+      --text-white: #f7f4ee;
+      --hud-muted: rgba(247, 244, 238, 0.55);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #000;
+      color: var(--text-white);
+      font-family: 'Be Vietnam Pro', sans-serif;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Khung sân khấu chính (mặc định 16:9 như video gốc, bấm R để đổi 9:16 TikTok) */
+    #stage {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      max-width: 177.78vh;
+      max-height: 56.25vw;
+      background: radial-gradient(circle at 65% 45%, #23190d 0%, #0b0907 60%, #050403 100%);
+      overflow: hidden;
+      box-shadow: 0 0 80px rgba(0, 0, 0, 0.95);
+      transition: all 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    #stage.vertical {
+      max-width: 56.25vh;
+      max-height: 100vh;
+    }
+
+    /* Lớp Canvas hạt bụi vàng, tia sáng, mưa & tia lửa */
+    #fx-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* Lớp nhiễu phim (Film Grain) + Viền tối (Vignette) */
+    .vignette {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle, transparent 48%, rgba(0, 0, 0, 0.85) 100%);
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .flash-overlay {
+      position: absolute;
+      inset: 0;
+      background: #fff;
+      opacity: 0;
+      z-index: 15;
+      pointer-events: none;
+    }
+
+    /* Thanh HUD trên & dưới giống video gốc */
+    .hud-top, .hud-bottom {
+      position: absolute;
+      left: 3.5%;
+      right: 3.5%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: clamp(10px, 1.05vw, 14px);
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--hud-muted);
+      z-index: 12;
+      pointer-events: none;
+    }
+    .hud-top { top: 3.2%; }
+    .hud-bottom { bottom: 3.2%; gap: 16px; }
+
+    .progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 24%;
+    }
+    .progress-track {
+      flex: 1;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.16);
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--gold-deep), var(--gold-light));
+    }
+
+    /* Container chứa các Scene */
+    .scene {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8% 7%;
+      opacity: 0;
+      visibility: hidden;
+      transform: scale(1.04);
+      transition: opacity 0.45s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.45s;
+    }
+
+    .scene.active {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1);
+    }
+
+    #stage.vertical .scene {
+      flex-direction: column;
+      text-align: center;
+      padding: 14% 7% 20%;
+    }
+
+    /* Typography chuẩn Kinetic */
+    .gold-text {
+      background: linear-gradient(180deg, #fff3cc 0%, #f5b942 52%, #b87314 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 6px 24px rgba(245, 185, 66, 0.28));
+    }
+
+    .silver-text {
+      background: linear-gradient(180deg, #ffffff 0%, #dcdcdc 65%, #9a9a9a 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 6px 25px rgba(255, 255, 255, 0.25));
+    }
+
+    .script-text {
+      font-family: 'Dancing Script', cursive;
+      font-size: clamp(26px, 3.6vw, 54px);
+      color: var(--text-white);
+      text-shadow: 0 4px 18px rgba(0, 0, 0, 0.8);
+    }
+
+    .impact-xl {
+      font-family: 'Montserrat', 'Be Vietnam Pro', sans-serif;
+      font-weight: 900;
+      font-size: clamp(42px, 6.4vw, 96px);
+      line-height: 0.96;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+    }
+
+    .impact-lg {
+      font-family: 'Montserrat', 'Be Vietnam Pro', sans-serif;
+      font-weight: 900;
+      font-size: clamp(32px, 4.8vw, 72px);
+      line-height: 1.02;
+      text-transform: uppercase;
+    }
+
+    /* Hiệu ứng Slam & Pop */
+    .anim-item {
+      opacity: 0;
+      transform: translateY(28px) scale(0.92);
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .anim-item.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .slam-item {
+      opacity: 0;
+      transform: scale(1.45);
+      filter: blur(8px);
+      transition: all 0.36s cubic-bezier(0.2, 0.9, 0.3, 1);
+    }
+    .slam-item.show {
+      opacity: 1;
+      transform: scale(1);
+      filter: blur(0);
+    }
+
+    /* === SCENE 1: HOOK (0 - 3.5s) === */
+    #scene-1 { justify-content: space-between; gap: 4%; }
+    .s1-left { flex: 1.15; z-index: 2; }
+    .type-line {
+      display: inline-flex;
+      align-items: center;
+      font-size: clamp(18px, 2.3vw, 34px);
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      color: var(--gold-light);
+      margin-bottom: 14px;
+      min-height: 1.3em;
+    }
+    .cursor-block {
+      display: inline-block;
+      width: 0.55em;
+      height: 1.05em;
+      background: var(--gold-main);
+      margin-left: 8px;
+      animation: blink 0.65s infinite;
+    }
+    @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
+    .s1-right {
+      flex: 0.85;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+    .hero-emblem {
+      width: clamp(200px, 25vw, 360px);
+      height: clamp(200px, 25vw, 360px);
+      border-radius: 50%;
+      border: 1.5px solid rgba(245, 185, 66, 0.45);
+      background: radial-gradient(circle at 35% 30%, rgba(255, 215, 130, 0.25), rgba(15, 11, 7, 0.92));
+      box-shadow: 0 0 70px rgba(245, 185, 66, 0.35), inset 0 0 40px rgba(245, 185, 66, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulseGlow 3s ease-in-out infinite;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 60px rgba(245, 185, 66, 0.3); }
+      50% { transform: scale(1.03); box-shadow: 0 0 95px rgba(245, 185, 66, 0.55); }
+    }
+    .emblem-caption {
+      margin-top: 14px;
+      font-size: clamp(10px, 0.95vw, 13px);
+      letter-spacing: 0.25em;
+      color: var(--gold-main);
+      opacity: 0.85;
+    }
+
+    /* === SCENE 2: ÁP LỰC / RÈN GIŨA (3.5 - 7.2s) === */
+    #scene-2 { justify-content: space-around; gap: 5%; }
+    .forge-box {
+      position: relative;
+      width: clamp(190px, 22vw, 310px);
+      height: clamp(190px, 22vw, 310px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hammer-arm {
+      transform-origin: 85% 80%;
+      animation: hammerStrike 0.9s cubic-bezier(0.55, 0.05, 0.68, 0.19) infinite;
+    }
+    @keyframes hammerStrike {
+      0%, 100% { transform: rotate(-28deg); }
+      45% { transform: rotate(4deg); }
+      55% { transform: rotate(-4deg); }
+    }
+    .shock-ring {
+      position: absolute;
+      bottom: 18%;
+      width: 140px;
+      height: 36px;
+      border: 2px solid var(--danger-red);
+      border-radius: 50%;
+      animation: ringExpand 0.9s ease-out infinite;
+    }
+    @keyframes ringExpand {
+      0%, 40% { transform: scale(0.3); opacity: 0; }
+      50% { opacity: 0.95; }
+      100% { transform: scale(1.75); opacity: 0; }
+    }
+    .ring-word {
+      display: inline-block;
+      padding: 6px 26px;
+      border: 2px solid rgba(245, 185, 66, 0.6);
+      border-radius: 999px;
+      margin: 8px 0;
+      box-shadow: 0 0 30px rgba(245, 185, 66, 0.2);
+    }
+
+    /* === SCENE 3: LỘT XÁC / KIM CƯƠNG (7.2 - 11.0s) === */
+    #scene-3 { justify-content: space-between; gap: 5%; }
+    .diamond-orb {
+      width: clamp(190px, 23vw, 330px);
+      height: clamp(190px, 23vw, 330px);
+      border-radius: 50%;
+      border: 3px solid rgba(255, 255, 255, 0.75);
+      background: radial-gradient(circle, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.03) 70%);
+      box-shadow: 0 0 65px rgba(255, 255, 255, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* === SCENE 4: CHIÊM NGHIỆM & KHUNG TƯ LIỆU (11.0 - 14.8s) === */
+    #scene-4 { justify-content: space-between; gap: 5%; }
+    .archive-frame {
+      flex: 0.95;
+      aspect-ratio: 16 / 10;
+      border: 1.5px solid rgba(245, 185, 66, 0.65);
+      background: linear-gradient(135deg, rgba(245,185,66,0.12), rgba(10,8,6,0.92));
+      padding: 18px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75);
+      overflow: hidden;
+    }
+    .archive-frame::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(245,185,66,0.04) 4px);
+    }
+    .frame-tag {
+      font-size: clamp(9px, 0.9vw, 12px);
+      letter-spacing: 0.2em;
+      color: var(--gold-main);
+    }
+
+    /* === SCENE 5: CAO TRÀO BÃO GIÔNG -> ĐỈNH CAO (14.8 - 18.8s) === */
+    #scene-5 { flex-direction: column; text-align: center; }
+    .storm-title {
+      position: relative;
+      display: inline-block;
+    }
+    .lightning-bolt {
+      position: absolute;
+      top: -35%;
+      left: 15%;
+      width: 70%;
+      height: 170%;
+      pointer-events: none;
+      filter: drop-shadow(0 0 12px #ff4d4d);
+    }
+    .halo-burst {
+      padding: 14px 38px;
+      border-radius: 999px;
+      border: 2px solid rgba(255, 226, 154, 0.75);
+      box-shadow: 0 0 70px rgba(245, 185, 66, 0.45);
+      margin-top: 10px;
+    }
+
+    /* === SCENE 6: THẺ TỔNG KẾT VIRAL (18.8 - 23.0s) === */
+    #scene-6 { justify-content: space-between; gap: 5%; }
+    .outro-card {
+      flex: 1.1;
+      text-align: left;
+    }
+    .outro-kicker {
+      font-size: clamp(11px, 1.05vw, 14px);
+      letter-spacing: 0.26em;
+      color: var(--gold-light);
+      margin-bottom: 6px;
+    }
+    .outro-divider {
+      height: 1.5px;
+      width: 100%;
+      background: linear-gradient(90deg, var(--gold-main), transparent);
+      margin: 14px 0 18px;
+    }
+    .poem-line {
+      font-size: clamp(16px, 2vw, 29px);
+      line-height: 1.62;
+      color: #f4efe6;
+      opacity: 0;
+      transform: translateX(-16px);
+      transition: all 0.55s ease;
+    }
+    .poem-line.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .poem-author {
+      margin-top: 14px;
+      font-style: italic;
+      font-size: clamp(12px, 1.1vw, 16px);
+      color: var(--gold-main);
+    }
+
+    /* Phụ đề Karaoke ở dưới giống video gốc */
+    .subtitle-bar {
+      position: absolute;
+      bottom: 8.5%;
+      left: 8%;
+      right: 8%;
+      text-align: center;
+      z-index: 12;
+      font-size: clamp(15px, 1.85vw, 27px);
+      font-weight: 700;
+      text-shadow: 0 3px 14px rgba(0, 0, 0, 0.95), 0 0 4px #000;
+      pointer-events: none;
+    }
+    .sub-active { color: var(--gold-main); }
+    .sub-dim { color: rgba(255, 255, 255, 0.65); }
+
+    /* Thanh điều khiển nổi (bấm H để ẩn khi quay màn hình) */
+    .controls {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+      display: flex;
+      gap: 8px;
+      background: rgba(15, 13, 10, 0.85);
+      border: 1px solid rgba(245, 185, 66, 0.35);
+      padding: 8px 14px;
+      border-radius: 999px;
+      backdrop-filter: blur(10px);
+      transition: opacity 0.3s;
+    }
+    .controls.hidden { opacity: 0; pointer-events: none; }
+    .controls button {
+      background: rgba(245, 185, 66, 0.16);
+      color: var(--gold-light);
+      border: 1px solid rgba(245, 185, 66, 0.4);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .controls button:hover {
+      background: var(--gold-main);
+      color: #090807;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Thanh điều khiển nhanh -->
+  <div class="controls" id="controls">
+    <button id="btn-play">▶ Phát + Âm thanh (Space)</button>
+    <button id="btn-ratio">📱 Đổi 16:9 / 9:16 (R)</button>
+    <button id="btn-hide">👁 Ẩn nút để quay (H)</button>
+  </div>
+
+  <div id="stage">
+    <canvas id="fx-canvas"></canvas>
+    <div class="vignette"></div>
+    <div class="flash-overlay" id="flash"></div>
+
+    <!-- HUD Top -->
+    <div class="hud-top">
+      <span id="hud-top-left">ÁP LỰC TẠO KIM CƯƠNG</span>
+      <span id="hud-top-right">TUỔI TRẺ · BẢN LĨNH & KHÁT VỌNG</span>
+    </div>
+
+    <!-- SCENE 1: HOOK -->
+    <section class="scene" id="scene-1">
+      <div class="s1-left">
+        <div class="type-line"><span id="typewriter"></span><span class="cursor-block"></span></div>
+        <div class="impact-xl gold-text slam-item" data-delay="1100">KHI NGƯỜI</div>
+        <div class="impact-xl gold-text slam-item" data-delay="1550">KHÁC DỪNG</div>
+        <div class="impact-xl gold-text slam-item" data-delay="2000">LẠI.</div>
+      </div>
+      <div class="s1-right anim-item" data-delay="400">
+        <div class="hero-emblem">
+          <!-- Biểu tượng la bàn / ngọn lửa ý chí -->
+          <svg width="58%" height="58%" viewBox="0 0 120 120" fill="none">
+            <circle cx="60" cy="60" r="52" stroke="#f5b942" stroke-width="1.5" stroke-dasharray="4 4"/>
+            <polygon points="60,12 72,54 108,60 72,66 60,108 48,66 12,60 48,54" fill="url(#goldGrad)"/>
+            <circle cx="60" cy="60" r="8" fill="#090807" stroke="#ffe29a" stroke-width="2"/>
+            <defs>
+              <linearGradient id="goldGrad" x1="12" y1="12" x2="108" y2="108">
+                <stop offset="0%" stop-color="#fff3cc"/>
+                <stop offset="50%" stop-color="#f5b942"/>
+                <stop offset="100%" stop-color="#9e5e08"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="emblem-caption">KHỞI HÀNH · 01:00 ĐÊM</div>
+      </div>
+    </section>
+
+    <!-- SCENE 2: RÈN GIŨA TRONG ÂM THẦM -->
+    <section class="scene" id="scene-2">
+      <div class="forge-box anim-item" data-delay="150">
+        <div class="shock-ring"></div>
+        <svg width="100%" height="100%" viewBox="0 0 220 220" fill="none">
+          <!-- Đe thép -->
+          <path d="M45 155 H175 L160 178 H60 Z" fill="#3a2d1d" stroke="#f5b942" stroke-width="2"/>
+          <path d="M30 140 H190 L175 155 H45 Z" fill="#f5b942"/>
+          <!-- Búa rèn chuyển động -->
+          <g class="hammer-arm">
+            <rect x="65" y="65" width="95" height="10" rx="5" transform="rotate(-18 65 65)" fill="#c97e16"/>
+            <rect x="48" y="46" width="34" height="52" rx="6" transform="rotate(-18 48 46)" fill="#ffe29a" stroke="#f5b942" stroke-width="2"/>
+          </g>
+        </svg>
+      </div>
+      <div class="s2-right">
+        <div class="script-text anim-item" data-delay="200">Đêm dài mài giũa</div>
+        <div class="impact-xl gold-text ring-word slam-item" data-delay="750">ÁP LỰC</div>
+        <div class="impact-lg silver-text slam-item" data-delay="1350">TRONG ÂM THẦM</div>
+      </div>
+    </section>
+
+    <!-- SCENE 3: BIẾN ĐỔI THÀNH KIM CƯƠNG -->
+    <section class="scene" id="scene-3">
+      <div>
+        <div class="script-text anim-item" data-delay="200">Từ viên đá thô</div>
+        <div class="impact-xl silver-text slam-item" data-delay="850">KIM CƯƠNG</div>
+        <div class="impact-lg gold-text slam-item" data-delay="1450">MỚI TỎA SÁNG</div>
+      </div>
+      <div class="diamond-orb slam-item" data-delay="950">
+        <svg width="62%" height="62%" viewBox="0 0 120 120" fill="none">
+          <polygon points="32,24 88,24 110,50 60,104 10,50" fill="rgba(255,255,255,0.16)" stroke="#ffffff" stroke-width="2.5"/>
+          <polyline points="10,50 110,50" stroke="#ffffff" stroke-width="1.5"/>
+          <polyline points="32,24 45,50 60,104 75,50 88,24" stroke="#ffe29a" stroke-width="1.5"/>
+        </svg>
+      </div>
+    </section>
+
+    <!-- SCENE 4: CHIÊM NGHIỆM -->
+    <section class="scene" id="scene-4">
+      <div>
+        <div class="script-text anim-item" data-delay="200">Đời không trải hoa</div>
+        <div class="impact-lg gold-text slam-item" data-delay="750">TRÊN BƯỚC CHÂN</div>
+        <div class="script-text anim-item" data-delay="1350" style="margin-top:8px;">người đứng lại</div>
+      </div>
+      <div class="archive-frame anim-item" data-delay="350">
+        <div class="frame-tag">TƯ DUY · KỶ LUẬT TỰ THÂN</div>
+        <div style="text-align:center; z-index:2;">
+          <div style="font-size: clamp(28px, 3.8vw, 56px); font-weight:900; color:var(--gold-light);">01% MỖI NGÀY</div>
+          <div style="font-size: clamp(11px, 1.1vw, 15px); letter-spacing:0.18em; opacity:0.8; margin-top:6px;">365 NGÀY = 37.78 LẦN BỨT PHÁ</div>
+        </div>
+        <div class="frame-tag" style="text-align:right;">KHÔNG BỎ CUỘC</div>
+      </div>
+    </section>
+
+    <!-- SCENE 5: CAO TRÀO BÃO GIÔNG -> ĐỈNH CAO -->
+    <section class="scene" id="scene-5">
+      <div class="storm-title slam-item" data-delay="200">
+        <div class="impact-xl silver-text">QUA BÃO GIÔNG</div>
+        <svg class="lightning-bolt" viewBox="0 0 200 120" fill="none">
+          <polyline points="10,20 75,55 60,72 135,95 120,108 190,115" stroke="#ff3b30" stroke-width="3.5" fill="none"/>
+        </svg>
+      </div>
+      <div class="impact-lg gold-text slam-item" data-delay="1100" style="margin-top:10px;">RÈN BẢN LĨNH</div>
+      <div class="halo-burst slam-item" data-delay="1950">
+        <div class="impact-xl gold-text">CHẠM ĐỈNH CAO</div>
+      </div>
+    </section>
+
+    <!-- SCENE 6: THẺ TỔNG KẾT -->
+    <section class="scene" id="scene-6">
+      <div class="archive-frame anim-item" data-delay="200" style="flex:0.85;">
+        <div class="frame-tag">THÔNG ĐIỆP · GỬI NGƯỜI TRẺ</div>
+        <div style="text-align:center; z-index:2;">
+          <div class="impact-lg gold-text">GIỮ VỮNG</div>
+          <div class="script-text">ngọn lửa bên trong</div>
+        </div>
+        <div class="frame-tag">SAVE &amp; SHARE</div>
+      </div>
+      <div class="outro-card">
+        <div class="outro-kicker anim-item" data-delay="250">TRIẾT LÝ · BẢN LĨNH TUỔI TRẺ</div>
+        <div class="impact-lg gold-text anim-item" data-delay="450">ÁP LỰC TẠO KIM CƯƠNG</div>
+        <div class="outro-divider"></div>
+        <div class="poem-line" id="pl-1">Tôi chọn bước đi khi người khác dừng lại,</div>
+        <div class="poem-line" id="pl-2">Đêm dài mài giũa áp lực trong âm thầm.</div>
+        <div class="poem-line" id="pl-3">Từ viên đá thô kim cương mới tỏa sáng,</div>
+        <div class="poem-line" id="pl-4">Qua bão giông rèn bản lĩnh chạm đỉnh cao.</div>
+        <div class="poem-author anim-item" data-delay="2400">— Dành cho những ngày bạn muốn bỏ cuộc —</div>
+      </div>
+    </section>
+
+    <!-- Phụ đề Karaoke -->
+    <div class="subtitle-bar" id="subtitle"></div>
+
+    <!-- HUD Bottom -->
+    <div class="hud-bottom">
+      <span id="hud-bottom-left">QUA BÃO GIÔNG RÈN BẢN LĨNH CHẠM ĐỈNH CAO</span>
+      <div class="progress-wrap">
+        <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+        <span id="timecode">00:00</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* =====================================================================
+       1. CẤU HÌNH KỊCH BẢN & THỜI GIAN (Bạn có thể sửa chữ ở đây siêu nhanh)
+       ===================================================================== */
+    const TOTAL_DURATION = 23000; // 23 giây
+
+    const SCENES = [
+      {
+        id: 'scene-1',
+        start: 0,
+        end: 3600,
+        mode: 'sunburst',
+        sub: 'Tôi chọn bước đi khi người khác dừng lại.',
+        typeText: 'TÔI CHỌN BƯỚC ĐI'
+      },
+      {
+        id: 'scene-2',
+        start: 3600,
+        end: 7400,
+        mode: 'embers',
+        sub: 'Đêm dài mài giũa áp lực trong âm thầm.'
+      },
+      {
+        id: 'scene-3',
+        start: 7400,
+        end: 11200,
+        mode: 'diamond',
+        sub: 'Từ viên đá thô kim cương mới tỏa sáng.'
+      },
+      {
+        id: 'scene-4',
+        start: 11200,
+        end: 15000,
+        mode: 'petals',
+        sub: 'Đời không trải hoa trên bước chân người đứng lại.'
+      },
+      {
+        id: 'scene-5',
+        start: 15000,
+        end: 19000,
+        mode: 'storm',
+        sub: 'Qua bão giông rèn bản lĩnh chạm đỉnh cao.'
+      },
+      {
+        id: 'scene-6',
+        start: 19000,
+        end: 23000,
+        mode: 'embers',
+        sub: 'Áp lực tạo kim cương — Bản lĩnh tạo thành công.'
+      }
+    ];
+
+    /* =====================================================================
+       2. BỘ TẠO ÂM THANH ĐIỆN ẢNH TỰ ĐỘNG (WEB AUDIO API)
+       ===================================================================== */
+    class SoundFX {
+      constructor() { this.ctx = null; }
+      init() {
+        if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+      }
+      boom(freq = 65, duration = 0.7) {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq * 1.8, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(28, this.ctx.currentTime + duration);
+        gain.gain.setValueAtTime(0.42, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(); osc.stop(this.ctx.currentTime + duration);
+      }
+      tick() {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(950, this.ctx.currentTime);
+        gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(); osc.stop(this.ctx.currentTime + 0.04);
+      }
+    }
+    const sfx = new SoundFX();
+
+    /* =====================================================================
+       3. CANVAS HIỆU ỨNG HẠT BỤI VÀNG, TIA NẮNG, MƯA SẤM SÉT (60FPS)
+       ===================================================================== */
+    const canvas = document.getElementById('fx-canvas');
+    const ctx = canvas.getContext('2d');
+    let currentMode = 'sunburst';
+    let particles = [];
+
+    function resizeCanvas() {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    for (let i = 0; i < 95; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 2.4 + 0.6,
+        vx: (Math.random() - 0.5) * 0.7,
+        vy: -Math.random() * 1.1 - 0.2,
+        alpha: Math.random() * 0.7 + 0.2
+      });
+    }
+
+    function renderFX(t) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Tia sáng Sunburst ở Scene 1 & 5
+      if (currentMode === 'sunburst' || currentMode === 'diamond') {
+        const cx = canvas.width * (currentMode === 'sunburst' ? 0.72 : 0.74);
+        const cy = canvas.height * 0.48;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(t * 0.00018);
+        for (let i = 0; i < 18; i++) {
+          ctx.rotate((Math.PI * 2) / 18);
+          const grad = ctx.createLinearGradient(0, 0, canvas.width * 0.65, 0);
+          grad.addColorStop(0, currentMode === 'sunburst' ? 'rgba(245, 185, 66, 0.14)' : 'rgba(255, 255, 255, 0.12)');
+          grad.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(canvas.width * 0.65, -28);
+          ctx.lineTo(canvas.width * 0.65, 28);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      // Hạt chuyển động theo từng phân cảnh
+      particles.forEach(p => {
+        if (currentMode === 'storm') {
+          p.x -= 2.5;
+          p.y += 11;
+          ctx.strokeStyle = 'rgba(200, 220, 255, 0.25)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p.x + 3, p.y - 14);
+          ctx.stroke();
+        } else {
+          p.x += p.vx + (currentMode === 'petals' ? 1.4 : 0);
+          p.y += p.vy;
+          ctx.fillStyle = currentMode === 'diamond' || currentMode === 'petals'
+            ? `rgba(255, 255, 255, ${p.alpha})`
+            : `rgba(245, 185, 66, ${p.alpha})`;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        if (p.y < -10) p.y = canvas.height + 10;
+        if (p.y > canvas.height + 10) p.y = -10;
+        if (p.x < -10) p.x = canvas.width + 10;
+        if (p.x > canvas.width + 10) p.x = -10;
+      });
+    }
+
+    /* =====================================================================
+       4. ĐIỀU KHIỂN TIMELINE & ĐỒNG BỘ CHỮ / KARAOKE
+       ===================================================================== */
+    let startTime = null;
+    let activeSceneIndex = -1;
+    let timers = [];
+
+    function triggerFlash() {
+      const flash = document.getElementById('flash');
+      flash.style.transition = 'none';
+      flash.style.opacity = '0.45';
+      requestAnimationFrame(() => {
+        flash.style.transition = 'opacity 0.45s ease-out';
+        flash.style.opacity = '0';
+      });
+    }
+
+    function activateScene(idx) {
+      if (idx === activeSceneIndex) return;
+      activeSceneIndex = idx;
+      timers.forEach(clearTimeout);
+      timers = [];
+
+      document.querySelectorAll('.scene').forEach((el, i) => {
+        el.classList.toggle('active', i === idx);
+        if (i !== idx) {
+          el.querySelectorAll('.show').forEach(node => node.classList.remove('show'));
+        }
+      });
+
+      const sceneData = SCENES[idx];
+      if (!sceneData) return;
+      currentMode = sceneData.mode;
+      triggerFlash();
+      sfx.boom(idx === 4 ? 52 : 70, 0.75);
+
+      const sceneEl = document.getElementById(sceneData.id);
+      sceneEl.querySelectorAll('[data-delay]').forEach(el => {
+        const delay = Number(el.dataset.delay);
+        timers.push(setTimeout(() => {
+          el.classList.add('show');
+          if (el.classList.contains('slam-item')) sfx.boom(85, 0.35);
+        }, delay));
+      });
+
+      // Hiệu ứng gõ chữ Scene 1
+      if (sceneData.typeText) {
+        const target = document.getElementById('typewriter');
+        target.textContent = '';
+        [...sceneData.typeText].forEach((ch, k) => {
+          timers.push(setTimeout(() => {
+            target.textContent += ch;
+            if (ch !== ' ') sfx.tick();
+          }, k * 55));
+        });
+      }
+
+      // Hiện từng dòng thơ ở Scene 6
+      if (sceneData.id === 'scene-6') {
+        ['pl-1', 'pl-2', 'pl-3', 'pl-4'].forEach((id, k) => {
+          timers.push(setTimeout(() => {
+            document.getElementById(id).classList.add('show');
+          }, 650 + k * 420));
+        });
+      }
+    }
+
+    function updateSubtitle(text, progressRatio) {
+      const words = text.split(' ');
+      const activeCount = Math.max(1, Math.ceil(words.length * progressRatio));
+      const highlighted = words.slice(0, activeCount).join(' ');
+      const rest = words.slice(activeCount).join(' ');
+      document.getElementById('subtitle').innerHTML =
+        `<span class="sub-active">${highlighted}</span> <span class="sub-dim">${rest}</span>`;
+    }
+
+    function loop(now) {
+      if (!startTime) startTime = now;
+      const elapsed = (now - startTime) % TOTAL_DURATION;
+
+      // Thanh tiến trình & Timecode
+      const pct = (elapsed / TOTAL_DURATION) * 100;
+      document.getElementById('progress-fill').style.width = `${pct}%`;
+      const sec = Math.floor(elapsed / 1000);
+      document.getElementById('timecode').textContent = `00:${String(sec).padStart(2, '0')}`;
+
+      // Xác định Scene hiện tại
+      const idx = SCENES.findIndex(s => elapsed >= s.start && elapsed < s.end);
+      if (idx !== -1) {
+        activateScene(idx);
+        const s = SCENES[idx];
+        const localRatio = (elapsed - s.start) / (s.end - s.start);
+        updateSubtitle(s.sub, Math.min(1, localRatio * 1.25));
+      }
+
+      renderFX(now);
+      requestAnimationFrame(loop);
+    }
+
+    function restart() {
+      sfx.init();
+      activeSceneIndex = -1;
+      startTime = performance.now();
+    }
+
+    document.getElementById('btn-play').addEventListener('click', restart);
+    document.getElementById('btn-ratio').addEventListener('click', () => {
+      document.getElementById('stage').classList.toggle('vertical');
+      setTimeout(resizeCanvas, 460);
+    });
+    document.getElementById('btn-hide').addEventListener('click', () => {
+      document.getElementById('controls').classList.add('hidden');
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') { e.preventDefault(); restart(); }
+      if (e.key.toLowerCase() === 'r') {
+        document.getElementById('stage').classList.toggle('vertical');
+        setTimeout(resizeCanvas, 460);
+      }
+      if (e.key.toLowerCase() === 'h') {
+        document.getElementById('controls').classList.toggle('hidden');
+      }
+    });
+
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
